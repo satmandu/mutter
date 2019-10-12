@@ -251,6 +251,10 @@ prefs_changed_callback (MetaPreference pref,
       meta_window_recalc_features (window);
       meta_window_queue (window, META_QUEUE_MOVE_RESIZE);
     }
+  else if (pref == META_PREF_FOCUS_MODE)
+    {
+      meta_window_appears_focused_changed (window);
+    }
 }
 
 static void
@@ -4911,6 +4915,9 @@ set_workspace_state (MetaWindow    *window,
         }
     }
 
+  if (!window->constructing)
+    meta_window_appears_focused_changed (window);
+
   /* queue a move_resize since changing workspaces may change
    * the relevant struts
    */
@@ -5210,7 +5217,7 @@ meta_window_change_workspace_by_index (MetaWindow *window,
     meta_window_change_workspace (window, workspace);
 }
 
-static void
+void
 meta_window_appears_focused_changed (MetaWindow *window)
 {
   set_net_wm_state (window);
@@ -7312,7 +7319,16 @@ meta_window_get_frame (MetaWindow *window)
 gboolean
 meta_window_appears_focused (MetaWindow *window)
 {
-  return window->has_focus || (window->attached_focus_window != NULL);
+  MetaWorkspaceManager *workspace_manager;
+  MetaWorkspace *workspace;
+
+  workspace_manager = window->display->workspace_manager;
+  workspace = meta_window_get_workspace (window);
+
+  if (workspace && workspace != workspace_manager->active_workspace)
+    return window == meta_workspace_get_default_focus_window (workspace);
+  else
+    return window->has_focus || window->attached_focus_window;
 }
 
 gboolean
