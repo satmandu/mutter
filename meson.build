@@ -411,7 +411,7 @@ if have_wayland
   elif cc.has_header_symbol('linux/random.h', 'getrandom')
     cdata.set('HAVE_LINUX_RANDOM', 1)
   else
-    error('Required function getrandom not found')
+    cdata.set('NO_LINUX_RANDOM', 1)
   endif
 
   # For Xwayland -initfd usage
