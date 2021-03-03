@@ -37,6 +37,17 @@
 #include <sys/random.h>
 #elif defined(HAVE_LINUX_RANDOM)
 #include <linux/random.h>
+#elif NO_LINUX_RANDOM
+#include <sys/param.h>
+#include <fcntl.h>
+ssize_t getrandom(void *buf, size_t buflen, unsigned int flags) {
+int fd = open("/dev/random", O_CLOEXEC);
+if (fd < 0)
+  return -1;
+ssize_t bytes = read(fd, buf, buflen);
+close(fd);
+return bytes;
+}
 #endif
 #include <unistd.h>
 #include <X11/extensions/Xrandr.h>
